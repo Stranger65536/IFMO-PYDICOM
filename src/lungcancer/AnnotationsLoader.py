@@ -54,7 +54,7 @@ class AnnotationsLoader:
                 if self._XmlExtension in file.lower():
                     file_path = os.path.join(dir_name, file)
                     self._process_annotation_file(all_nodules, file_path)
-        self._log.info('Annotation loaded total: {}'.format(len(all_nodules)))
+        self._log.info('Annotation loaded totally: {}'.format(len(all_nodules)))
         return all_nodules
 
     # noinspection PyBroadException
@@ -70,26 +70,38 @@ class AnnotationsLoader:
             for elem in root:
                 tag = elem.tag.lower()
                 if tag == self._ResponseHeader:
-                    for node in elem:
-                        tag2 = node.tag.lower()
-                        if tag2 == self._SeriesInstanceUid:
-                            series = node.text
-                        if tag2 == self._StudyInstanceUID:
-                            study = node.text
+                    series, study = self._handle_response_header_tag(elem, series, study)
                 if tag == self._readingSession:
-                    for node in elem:
-                        tag2 = node.tag.lower()
-                        if tag2 == self._unblindedReadNodule:
-                            self._handle_unblinded_read_nodule_tag(node, xml_nodules)
+                    self._handle_reading_session_tag(elem, xml_nodules)
+
             self._check_mandatory_root_tag_values(series, study)
-            for nodule in xml_nodules:
-                nodule.set_study(study)
-                nodule.set_series(series)
+            self._fill_nodules_with_response_header_info(series, study, xml_nodules)
             self._log.info('{} nodule annotations loaded'.format(len(xml_nodules)))
             all_nodules.extend(xml_nodules)
         except Exception:
             type, value, traceback = sys.exc_info()
             self._log.error('Can\'t load xml file: {} due an error: {}'.format(file_path, value), exc_info=True)
+
+    @staticmethod
+    def _fill_nodules_with_response_header_info(series, study, xml_nodules):
+        for nodule in xml_nodules:
+            nodule.set_study(study)
+            nodule.set_series(series)
+
+    def _handle_reading_session_tag(self, elem, xml_nodules):
+        for node in elem:
+            tag = node.tag.lower()
+            if tag == self._unblindedReadNodule:
+                self._handle_unblinded_read_nodule_tag(node, xml_nodules)
+
+    def _handle_response_header_tag(self, elem, series, study):
+        for node in elem:
+            tag = node.tag.lower()
+            if tag == self._SeriesInstanceUid:
+                series = node.text
+            if tag == self._StudyInstanceUID:
+                study = node.text
+        return series, study
 
     def _check_mandatory_root_tag_values(self, series, study):
         self._check_initialized(study, self._StudyInstanceUID)
@@ -101,12 +113,12 @@ class AnnotationsLoader:
         nodules = []
 
         for info in node:
-            tag3 = info.tag.lower()
-            if tag3 == self._noduleID:
+            tag = info.tag.lower()
+            if tag == self._noduleID:
                 nodule_id = self._handle_nodule_id_tag(info)
-            if tag3 == self._characteristics:
+            if tag == self._characteristics:
                 self._handle_characteristics_tag(annotations, info)
-            if tag3 == self._roi:
+            if tag == self._roi:
                 self._handle_roi_tag(info, nodules)
 
         self._check_mandatory_unblinded_read_nodule_values(nodule_id)
@@ -145,14 +157,14 @@ class AnnotationsLoader:
         points = []
 
         for attribute in info:
-            tag4 = attribute.tag.lower()
-            if tag4 == self._imageSOP_UID:
+            tag = attribute.tag.lower()
+            if tag == self._imageSOP_UID:
                 image_uid = self._handle_image_uid_tag(attribute)
-            if tag4 == self._imageZposition:
+            if tag == self._imageZposition:
                 image_z_position, image_z_position_init = self._handle_z_position_tag(attribute)
-            if tag4 == self._inclusion:
+            if tag == self._inclusion:
                 inclusion, inclusion_init = self._handle_inclusion_tag(attribute)
-            if tag4 == self._edgeMap:
+            if tag == self._edgeMap:
                 self._handle_edge_map_tag(attribute, points)
 
         self._check_mandatory_roi_values(image_uid, image_z_position_init, inclusion_init)
@@ -195,11 +207,11 @@ class AnnotationsLoader:
         x = y = 0
         x_init = y_init = False
         for coord in attribute:
-            tag5 = coord.tag.lower()
-            if tag5 == self._xCoord:
+            tag = coord.tag.lower()
+            if tag == self._xCoord:
                 x = int(coord.text)
                 x_init = True
-            if tag5 == self._yCoord:
+            if tag == self._yCoord:
                 y = int(coord.text)
                 y_init = True
         self._check_initialized(x_init, self._StudyInstanceUID)
