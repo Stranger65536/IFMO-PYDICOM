@@ -1,25 +1,22 @@
-import os
+import getopt
+import sys
 
-import dicom
-import numpy
-from matplotlib import pyplot
+from lungcancer.AnnotationsLoader import AnnotationsLoader
+from lungcancer.DicomLoader import DicomLoader
 
-path_dicom = "D:\Lung Cancer data\LIDC_FILTERED\LIDC-IDRI-0068"
 
-for dir_name, sub_dirs, file_list in os.walk(path_dicom):
-    for file in file_list:
-        if ".dcm" in file.lower():  # check whether the file's DICOM
-            file_path = os.path.join(dir_name, file)
-            dic = dicom.read_file(file_path)
-            dimensions = (int(dic.Rows), int(dic.Columns))
-            x = numpy.arange(0.0, (dimensions[0] + 1) * dimensions[0], dimensions[0])
-            y = numpy.arange(0.0, (dimensions[1] + 1) * dimensions[1], dimensions[1])
-            pixel_spacing = (float(dic.PixelSpacing[0]),
-                             float(dic.PixelSpacing[1]),
-                             float(dic.SliceThickness))
-            image = numpy.zeros(dimensions, dtype=dic.pixel_array.dtype)
-            image = dic.pixel_array
-            pyplot.figure(dpi=600)
-            pyplot.axes().set_aspect('equal', 'datalim')
-            pyplot.set_cmap(pyplot.gray())
-            pyplot.pcolormesh(x, y, numpy.flipud(image[:, :]))
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    opts, args = getopt.getopt(argv[1:], [])
+    if len(args) < 2:
+        print('Usage: __init__.py <dicom_directory> <annotations directory>')
+        return 1
+    else:
+        annotations_loader = AnnotationsLoader(args[1])
+        nodules = annotations_loader.load_nodules_annotations()
+        return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
