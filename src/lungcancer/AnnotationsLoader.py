@@ -54,7 +54,7 @@ class AnnotationsLoader:
                 if self._XmlExtension in file.lower():
                     file_path = os.path.join(dir_name, file)
                     self._process_annotation_file(all_nodules, file_path)
-        self._log.info('Annotation loaded totally: {}'.format(len(all_nodules)))
+        self._log.info('{} nodule annotations loaded totally'.format(len(all_nodules)))
         return all_nodules
 
     # noinspection PyBroadException
@@ -76,7 +76,7 @@ class AnnotationsLoader:
 
             self._check_mandatory_root_tag_values(series, study)
             self._fill_nodules_with_response_header_info(series, study, xml_nodules)
-            self._log.info('{} nodule annotations loaded'.format(len(xml_nodules)))
+            self._log.info('{} nodule annotations loaded from file'.format(len(xml_nodules)))
             all_nodules.extend(xml_nodules)
         except Exception:
             type, value, traceback = sys.exc_info()
@@ -122,11 +122,10 @@ class AnnotationsLoader:
                 self._handle_roi_tag(info, nodules)
 
         self._check_mandatory_unblinded_read_nodule_values(nodule_id)
-        if annotations and annotations['malignancy']:
-            self._fill_nodules_with_unblinded_read_nodule_tag(annotations, nodule_id, nodules)
-            xml_nodules.extend(nodules)
-        else:
-            self._log.warn('Missing or empty {} attribute, skip {} nodules'.format(self._characteristics, len(nodules)))
+        if not annotations or not annotations['malignancy']:
+            self._log.warn('Missing or empty {} attribute for {} nodules'.format(self._characteristics, len(nodules)))
+        self._fill_nodules_with_unblinded_read_nodule_tag(annotations, nodule_id, nodules)
+        xml_nodules.extend(nodules)
 
     def _check_mandatory_unblinded_read_nodule_values(self, nodule_id):
         self._check_initialized(nodule_id, self._noduleID)
