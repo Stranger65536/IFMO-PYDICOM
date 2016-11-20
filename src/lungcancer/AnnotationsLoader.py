@@ -48,7 +48,7 @@ class AnnotationsLoader:
         self._annotations_path = annotations_path
 
     def load_nodules_annotations(self):
-        all_nodules = []
+        all_nodules = set()
         for dir_name, sub_dirs, file_list in os.walk(self._annotations_path):
             for file in file_list:
                 if self._XmlExtension in file.lower():
@@ -77,7 +77,7 @@ class AnnotationsLoader:
             self._check_mandatory_root_tag_values(series, study)
             self._fill_nodules_with_response_header_info(series, study, xml_nodules)
             self._log.info('{} nodule annotations loaded from file'.format(len(xml_nodules)))
-            all_nodules.extend(xml_nodules)
+            all_nodules.update(xml_nodules)
         except Exception:
             type, value, traceback = sys.exc_info()
             self._log.error('Can\'t load xml file: {} due an error: {}'.format(file_path, value), exc_info=True)

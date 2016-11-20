@@ -57,6 +57,28 @@ class Nodule:
     def get_annotations(self):
         return self._annotations
 
+    def __eq__(self, other):
+        if not isinstance(other, Nodule):
+            return False
+
+        return \
+            self._study == other._study and \
+            self._series == other._series and \
+            self._nodule_id == other._nodule_id and \
+            self._image_uid == other._image_uid and \
+            self._image_z_position == other._image_z_position and \
+            frozenset(self._points) == frozenset(other._points) and \
+            self._nodule_id == other._nodule_id
+
+    def __hash__(self, *args, **kwargs):
+        return hash((self._study,
+                     self._series,
+                     self._nodule_id,
+                     self._image_uid,
+                     self._image_z_position,
+                     frozenset(self._points),
+                     self._nodule_id))
+
     def __repr__(self, *args, **kwargs):
         return "".join(["Nodule(", str(self._study), ",",
                         str(self._series), ",",
