@@ -82,5 +82,5 @@ class Nodule:
     def __repr__(self, *args, **kwargs):
         return "".join(["Nodule(", str(self._study), ",",
                         str(self._series), ",",
-                        str(self._image_z_position), ",",
+                        str(self._image_uid), ",",
                         str(len(self._points)), ")"])

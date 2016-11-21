@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ElementTree
+from logging.handlers import RotatingFileHandler
 
 from lungcancer.Nodule import Nodule
 from lungcancer.Point import Point
@@ -28,11 +29,12 @@ class AnnotationsLoader:
     @staticmethod
     def _configure_logger():
         logger = logging.getLogger('AnnotationsLoader')
-        logger.setLevel(logging.INFO)
-        fh = logging.FileHandler('AnnotationsLoader.log')
+        logger.setLevel(logging.DEBUG)
+        fh = RotatingFileHandler('AnnotationsLoader.log', mode='a', maxBytes=50 * 1024 * 1024,
+                                 backupCount=2, encoding=None, delay=0)
         fh.setLevel(logging.INFO)
         ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
+        ch.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
@@ -60,7 +62,7 @@ class AnnotationsLoader:
     # noinspection PyBroadException
     def _process_annotation_file(self, all_nodules, file_path):
         try:
-            self._log.info('Found annotation file {}, loading'.format(file_path))
+            self._log.debug('Found annotation file {}, loading'.format(file_path))
             root = self._parse_xml(file_path)
 
             series = ''
@@ -76,7 +78,7 @@ class AnnotationsLoader:
 
             self._check_mandatory_root_tag_values(series, study)
             self._fill_nodules_with_response_header_info(series, study, xml_nodules)
-            self._log.info('{} nodule annotations loaded from file'.format(len(xml_nodules)))
+            self._log.debug('{} nodule annotations loaded from file'.format(len(xml_nodules)))
             all_nodules.update(xml_nodules)
         except Exception:
             type, value, traceback = sys.exc_info()
