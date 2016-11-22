@@ -1,6 +1,7 @@
 import getopt
 import importlib
 import logging
+import os
 import sys
 from logging.handlers import RotatingFileHandler
 
@@ -16,7 +17,7 @@ def configure_logger():
 
     logger.setLevel(logging.DEBUG)
     fh = RotatingFileHandler('__init__.log', mode='a', maxBytes=10 * 1024 * 1024,
-                             backupCount=2, encoding=None, delay=0)
+                             backupCount=0, encoding=None, delay=0)
     fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
@@ -37,7 +38,7 @@ def main(argv=None):
     opts, args = getopt.getopt(argv[1:], [])
     if len(args) < 3:
         log.error('Usage: __init__.py <annotations directory> '
-                  '<diagnosis directory> <dicom_directory>\n'
+                  '<diagnosis directory> <dicom_directory> <output_directory>\n'
                   'annotations directory - all *.xml files from the '
                   'specified directory will be treated as annotations\n'
                   'diagnosis directory - all *.csv files from the '
@@ -47,7 +48,9 @@ def main(argv=None):
                   'dicom_directory - all *.dcm files from the '
                   'specified directory will be treated as dicom files and '
                   'parsed for nodule images extraction '
-                  'according to the loaded annotations')
+                  'according to the loaded annotations\n'
+                  'output_directory - all nodule images will '
+                  'be stored in the specified directory')
         return 1
     else:
         log.info('Loading nodule annotations....')
@@ -59,6 +62,8 @@ def main(argv=None):
         log.info('Loading dicoms metadata....')
         metadata = read_dicoms_metadata(args[2])
         log.info('Dicoms metadata loaded')
+        output_path = args[3]
+        os.makedirs(output_path, exist_ok=True)
 
         for nodule in nodules:
             study = nodule.get_study()
@@ -70,7 +75,7 @@ def main(argv=None):
                 log.error('No dicom file found for nodule with series id {}!'.format(series))
             if image_uid not in metadata[study][series]:
                 log.error('No dicom file found for nodule with image id {}!'.format(image_uid))
-
+            DicomLoader.extract_images(metadata[study][series][image_uid], nodule, output_path)
         return 0
 
 
