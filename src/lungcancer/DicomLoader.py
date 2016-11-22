@@ -12,11 +12,11 @@ class DicomLoader:
     def _configure_logger():
         logger = logging.getLogger('DicomLoader')
         logger.setLevel(logging.DEBUG)
-        fh = RotatingFileHandler('DicomLoader.log', mode='a', maxBytes=50 * 1024 * 1024,
+        fh = RotatingFileHandler('DicomLoader.log', mode='a', maxBytes=10 * 1024 * 1024,
                                  backupCount=2, encoding=None, delay=0)
-        fh.setLevel(logging.INFO)
+        fh.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
+        ch.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
