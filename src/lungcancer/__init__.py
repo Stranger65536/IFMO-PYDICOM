@@ -16,7 +16,7 @@ def configure_logger():
     logger = logging.getLogger('__init__')
 
     logger.setLevel(logging.DEBUG)
-    fh = RotatingFileHandler('__init__.log', mode='a', maxBytes=10 * 1024 * 1024,
+    fh = RotatingFileHandler('__init__.log', mode='a', maxBytes=2 * 1024 * 1024,
                              backupCount=0, encoding=None, delay=0)
     fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
@@ -64,7 +64,12 @@ def main(argv=None):
         log.info('Dicoms metadata loaded')
         output_path = args[3]
         os.makedirs(output_path, exist_ok=True)
+        os.makedirs(os.path.join(output_path, 'nodules'), exist_ok=True)
+        os.makedirs(os.path.join(output_path, 'full'), exist_ok=True)
+        log.info('Extracting images')
 
+        processed_count = 0
+        extracted_count = 0
         for nodule in nodules:
             study = nodule.get_study()
             series = nodule.get_series()
@@ -75,7 +80,11 @@ def main(argv=None):
                 log.error('No dicom file found for nodule with series id {}!'.format(series))
             if image_uid not in metadata[study][series]:
                 log.error('No dicom file found for nodule with image id {}!'.format(image_uid))
-            DicomLoader.extract_images(metadata[study][series][image_uid], nodule, output_path)
+            extracted = DicomLoader.extract_images(metadata[study][series][image_uid], nodule, diagnosis, output_path)
+            extracted_count += int(extracted)
+            processed_count += 1
+            log.debug('{} nodules of {} processed'.format(processed_count, len(nodules)))
+        log.info('{} nodule images extracted'.format(extracted_count))
         return 0
 
 

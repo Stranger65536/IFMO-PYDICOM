@@ -30,7 +30,7 @@ class AnnotationsLoader:
     def _configure_logger():
         logger = logging.getLogger('AnnotationsLoader')
         logger.setLevel(logging.DEBUG)
-        fh = RotatingFileHandler('AnnotationsLoader.log', mode='a', maxBytes=10 * 1024 * 1024,
+        fh = RotatingFileHandler('AnnotationsLoader.log', mode='a', maxBytes=2 * 1024 * 1024,
                                  backupCount=0, encoding=None, delay=0)
         fh.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
