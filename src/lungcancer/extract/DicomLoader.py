@@ -1,34 +1,18 @@
-import logging
 import os
-from logging.handlers import RotatingFileHandler
 
 import dicom
 import numpy
 from PIL import Image
 from matplotlib.path import Path
 
+from lungcancer.LoggerUtils import LoggerUtils
+
 
 class DicomLoader:
     _DicomExtension = '.dcm'
+    _DiagnosisUnknown = '0'
 
-    @staticmethod
-    def _configure_logger():
-        logger = logging.getLogger('DicomLoader')
-        logger.setLevel(logging.DEBUG)
-        fh = RotatingFileHandler('DicomLoader.log', mode='a', maxBytes=2 * 1024 * 1024,
-                                 backupCount=0, encoding=None, delay=0)
-        fh.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-        logger.addHandler(fh)
-        logger.addHandler(ch)
-        return logger
-
-    # noinspection PyUnresolvedReferences
-    _log = _configure_logger.__func__()
+    _log = LoggerUtils.get_logger('DicomLoader')
 
     def __init__(self, dicom_path):
         self._log.info('Dicoms directory: {}'.format(dicom_path))
@@ -42,7 +26,8 @@ class DicomLoader:
                 if self._DicomExtension in file.lower():
                     file_path = os.path.join(dir_name, file)
                     try:
-                        self._log.debug('Found dicom file #{} {}, loading'.format(file_counter, file_path))
+                        self._log.debug('Found dicom file #{} {}, loading'
+                                        .format(file_counter, file_path))
                         file_counter += 1
                         ds = dicom.read_file(file_path, stop_before_pixels=True)
                         image_uid = ds["0008", "0018"].value
@@ -60,7 +45,8 @@ class DicomLoader:
                         series_data[series] = image_data
                         study_data[study] = series_data
                     except Exception as e:
-                        self._log.error('Can\'t load dicom file: {} due an error'.format(file_path), e, exc_info=True)
+                        self._log.error('Can\'t load dicom file: {} due an error'
+                                        .format(file_path), e, exc_info=True)
         return study_data
 
     # noinspection PyBroadException
@@ -72,20 +58,25 @@ class DicomLoader:
             patient = ds['0010', '0020'].value
             if patient not in diagnosis:
                 DicomLoader._log.warn('Diagnosis not found for patient {}'.format(patient))
-            nodule.get_annotations()['malignancy'] = diagnosis[patient]
-            image = Image.fromarray(ds.pixel_array).convert('I;16')
+                nodule.get_annotations()['malignancy'] = DicomLoader._DiagnosisUnknown
+            else:
+                nodule.get_annotations()['malignancy'] = diagnosis[patient]
+            image = Image.fromarray(ds.pixel_array.astype('int16')).convert('I;16')
             cropped = Image.fromarray(DicomLoader._crop_by_nodule(image, nodule), 'I;16')
             if cropped.height is not 0 and cropped.width is not 0:
                 cropped_path = os.path.join(output_path, 'nodules')
                 full_path = os.path.join(output_path, 'full')
-                cropped.convert('RGB').save(os.path.join(cropped_path, DicomLoader._get_nodule_image_file_name(nodule)))
-                image.convert('RGB').save(os.path.join(full_path, DicomLoader._get_original_image_file_name(nodule)))
+                cropped.convert('RGB').save(os.path.join(cropped_path,
+                                                         DicomLoader._get_nodule_image_file_name(nodule)))
+                image.convert('RGB').save(os.path.join(full_path,
+                                                       DicomLoader._get_original_image_file_name(nodule)))
                 return True
             else:
                 DicomLoader._log.debug('Too small contour for nodule {}!'.format(nodule))
                 return False
         except Exception:
-            DicomLoader._log.error('Can\'t load dicom file: {} due an error'.format(dicom_path), exc_info=True)
+            DicomLoader._log.error('Can\'t extract image of nodule {} from dicom file {} due an error'
+                                   .format(nodule, dicom_path), exc_info=True)
             return False
 
     @staticmethod

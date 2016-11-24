@@ -1,12 +1,11 @@
-import logging
 import os
 import re
 import sys
 import xml.etree.ElementTree as ElementTree
-from logging.handlers import RotatingFileHandler
 
-from lungcancer.Nodule import Nodule
-from lungcancer.Point import Point
+from lungcancer.LoggerUtils import LoggerUtils
+from lungcancer.extract.Nodule import Nodule
+from lungcancer.extract.Point import Point
 
 
 class AnnotationsLoader:
@@ -26,24 +25,7 @@ class AnnotationsLoader:
     _xCoord = 'xCoord'.lower()
     _yCoord = 'yCoord'.lower()
 
-    @staticmethod
-    def _configure_logger():
-        logger = logging.getLogger('AnnotationsLoader')
-        logger.setLevel(logging.DEBUG)
-        fh = RotatingFileHandler('AnnotationsLoader.log', mode='a', maxBytes=2 * 1024 * 1024,
-                                 backupCount=0, encoding=None, delay=0)
-        fh.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-        logger.addHandler(fh)
-        logger.addHandler(ch)
-        return logger
-
-    # noinspection PyUnresolvedReferences
-    _log = _configure_logger.__func__()
+    _log = LoggerUtils.get_logger('AnnotationsLoader')
 
     def __init__(self, annotations_path):
         self._log.info('Annotations directory: {}'.format(annotations_path))
@@ -125,7 +107,8 @@ class AnnotationsLoader:
 
         self._check_mandatory_unblinded_read_nodule_values(nodule_id)
         if not annotations or not annotations['malignancy']:
-            self._log.debug('Missing or empty {} attribute for {} nodule(s)'.format(self._characteristics, len(nodules)))
+            self._log.debug('Missing or empty {} attribute for {} nodule(s)'
+                            .format(self._characteristics, len(nodules)))
         self._fill_nodules_with_unblinded_read_nodule_tag(annotations, nodule_id, nodules)
         xml_nodules.extend(nodules)
 

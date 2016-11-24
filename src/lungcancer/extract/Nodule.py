@@ -57,6 +57,7 @@ class Nodule:
     def get_annotations(self):
         return self._annotations
 
+    # noinspection PyProtectedMember
     def __eq__(self, other):
         if not isinstance(other, Nodule):
             return False

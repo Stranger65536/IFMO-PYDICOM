@@ -9,6 +9,7 @@ class Point:
     def y(self):
         return self._y
 
+    # noinspection PyProtectedMember
     def __eq__(self, other):
         if not isinstance(other, Point):
             return False
