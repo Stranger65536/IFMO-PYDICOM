@@ -13,6 +13,7 @@ class PatientDiagnosisLoader:
         self._log.info('Patient diagnosis directory: {}'.format(diagnosis_path))
         self._diagnosis_path = diagnosis_path
 
+    # noinspection PyBroadException
     def load_dicoms_metadata(self):
         file_counter = 1
         diagnosis = {}
@@ -21,8 +22,7 @@ class PatientDiagnosisLoader:
                 if self._DiagnosisExtension in file.lower():
                     file_path = os.path.join(dir_name, file)
                     try:
-                        self._log.debug('Found diagnosis file #{} {}, loading'
-                                        .format(file_counter, file_path))
+                        self._log.debug('Found diagnosis file #{} {}, loading'.format(file_counter, file_path))
                         file_counter += 1
                         with open(file_path, newline='') as csvfile:
                             csvreader = csv.reader(csvfile, delimiter=',', quotechar='"')
@@ -31,10 +31,9 @@ class PatientDiagnosisLoader:
                                     raise ValueError('Expected csv with structure ["PatientID" '
                                                      '(LIDC-IDRI-####), "Diagnose" (0-3)]')
                                 if row[0] in diagnosis:
-                                    self._log.warn('Duplicate diagnose found for patient {}'
-                                                   .format(row[0]))
+                                    self._log.warn('Duplicate diagnose found for patient {}'.format(row[0]))
                                 diagnosis[row[0]] = row[1]
-                    except Exception as e:
+                    except Exception:
                         self._log.error('Can\'t load diagnosis file: {} due an error'
-                                        .format(file_path), e, exc_info=True)
+                                        .format(file_path), exc_info=True)
         return diagnosis

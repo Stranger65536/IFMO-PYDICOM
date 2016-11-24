@@ -18,6 +18,7 @@ class DicomLoader:
         self._log.info('Dicoms directory: {}'.format(dicom_path))
         self._dicom_path = dicom_path
 
+    # noinspection PyBroadException
     def load_dicoms_metadata(self):
         file_counter = 1
         study_data = {}
@@ -44,9 +45,9 @@ class DicomLoader:
                         image_data[image_uid] = file_path
                         series_data[series] = image_data
                         study_data[study] = series_data
-                    except Exception as e:
+                    except Exception:
                         self._log.error('Can\'t load dicom file: {} due an error'
-                                        .format(file_path), e, exc_info=True)
+                                        .format(file_path), exc_info=True)
         return study_data
 
     # noinspection PyBroadException
