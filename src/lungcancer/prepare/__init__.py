@@ -1,8 +1,6 @@
 import getopt
 import importlib
-
 import logging
-
 import sys
 
 from lungcancer.prepare.ImageScaler import ImageScaler
