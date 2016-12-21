@@ -20,4 +20,4 @@ class Point:
         return hash((self._x, self._y))
 
     def __repr__(self):
-        return "".join(["Point(", str(self._x), ",", str(self._y), ")"])
+        return ''.join(['Point(', str(self._x), ',', str(self._y), ')'])

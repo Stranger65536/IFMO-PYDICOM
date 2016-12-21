@@ -10,6 +10,8 @@ from lungcancer.LoggerUtils import LoggerUtils
 
 class Net:
     _depth = 3  # RGB
+    _width = None
+    _height = None
 
     def __init__(self, base_images_path, mode):
         self._base_images_path = base_images_path
@@ -18,6 +20,9 @@ class Net:
 
     def build(self):
         raise NotImplementedError("You have to override this method into your model!")
+
+    def get_images_dir(self):
+        return '{}x{}'.format(self._width, self._height)
 
 
 class ResNet:
