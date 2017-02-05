@@ -10,7 +10,7 @@ from Utils import load_cache
 
 csv_ext = '.csv'
 log = LoggerUtils.get_logger('PatientDiagnosisLoader')
-diagnosis_file_name = 'diagnosis.cache'
+cache_file_name = 'diagnosis.cache'
 
 
 def parse_file(csvfile, diagnosis):
@@ -36,13 +36,13 @@ class PatientDiagnosisLoader(object):
         self._diagnosis_path = diagnosis_path
 
     def load_dicoms_metadata(self):
-        diagnosis_file = join(self._diagnosis_path,
-                              diagnosis_file_name)
-        if isfile(diagnosis_file):
+        cache_file = join(self._diagnosis_path, cache_file_name)
+
+        if isfile(cache_file):
             log.info('Found cache file with diagnosis, '
                      'delete it to reload: {}. Loading...'
-                     .format(diagnosis_file))
-            return load_cache(diagnosis_file)
+                     .format(cache_file))
+            return load_cache(cache_file)
 
         diagnosis = {}
         files = list_files(self._diagnosis_path, csv_ext)
@@ -63,7 +63,7 @@ class PatientDiagnosisLoader(object):
                 file_counter += 1
 
         log.info('Creating diagnosis cache: {}'
-                 .format(diagnosis_file))
-        create_cache(diagnosis_file, diagnosis, log)
+                 .format(cache_file))
+        create_cache(cache_file, diagnosis, log)
 
         return diagnosis

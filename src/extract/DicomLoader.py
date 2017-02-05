@@ -19,7 +19,7 @@ from Utils import load_cache
 dic_ext = '.dcm'
 diagnosis_unknown = '0'
 log = LoggerUtils.get_logger('DicomLoader')
-metadata_file_name = 'dicom.cache'
+cache_file_name = 'dicom.cache'
 
 unclassified_patients = set()
 
@@ -145,13 +145,13 @@ class DicomLoader(object):
         self._dicom_path = dicom_path
 
     def load_dicoms_metadata(self):
-        metadata_file = join(self._dicom_path,
-                             metadata_file_name)
-        if isfile(metadata_file):
+        cache_file = join(self._dicom_path, cache_file_name)
+
+        if isfile(cache_file):
             log.info('Found cache file with dicom metadata, '
                      'delete it to reload: {}. Loading...'
-                     .format(metadata_file))
-            return load_cache(metadata_file)
+                     .format(cache_file))
+            return load_cache(cache_file)
 
         study_data = {}
         error_files = []
@@ -180,7 +180,7 @@ class DicomLoader(object):
                               for f in l.values()])))
 
         log.info('Creating dicom metadata cache: {}'
-                 .format(metadata_file))
-        create_cache(metadata_file, study_data, log)
+                 .format(cache_file))
+        create_cache(cache_file, study_data, log)
 
         return study_data

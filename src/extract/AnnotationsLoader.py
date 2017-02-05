@@ -16,7 +16,7 @@ from extract.Slice import Slice
 log = LoggerUtils.get_logger('AnnotationsLoader')
 non_id_char = compile('[^_0-9a-zA-Z]')
 xml_ext = '.xml'
-annotations_file_name = 'annotations.cache'
+cache_file_name = 'annotations.cache'
 
 
 def _name_mangle(name):
@@ -203,13 +203,13 @@ class AnnotationsLoader(object):
         self._annotations_path = annotations_path
 
     def load_nodules_annotations(self):
-        annotations_file = join(self._annotations_path,
-                                annotations_file_name)
-        if isfile(annotations_file):
+        cache_file = join(self._annotations_path, cache_file_name)
+
+        if isfile(cache_file):
             log.info('Found cache file with annotations, '
                      'delete it to reload: {}. Loading...'
-                     .format(annotations_file))
-            return load_cache(annotations_file)
+                     .format(cache_file))
+            return load_cache(cache_file)
 
         nodules = {}
         files = list_files(self._annotations_path, xml_ext)
@@ -240,8 +240,8 @@ class AnnotationsLoader(object):
                               nodules.values()])))
 
         log.info('Creating annotations cache: {}'
-                 .format(annotations_file))
-        create_cache(annotations_file,
+                 .format(cache_file))
+        create_cache(cache_file,
                      list(nodules.values()),
                      log)
 
