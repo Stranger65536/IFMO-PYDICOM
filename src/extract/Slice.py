@@ -1,6 +1,8 @@
 # coding=utf-8
 from matplotlib.path import Path
-from numpy import array, vstack, mgrid
+from numpy import array
+from numpy import vstack
+from numpy import mgrid
 
 
 def area(points):

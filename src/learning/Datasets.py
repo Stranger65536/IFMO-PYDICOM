@@ -1,7 +1,8 @@
 # coding=utf-8
 from imghdr import what
 from os import listdir
-from os.path import isfile, splitext
+from os.path import isfile
+from os.path import splitext
 from os.path import join
 
 from PIL import Image
@@ -13,7 +14,8 @@ from numpy import asarray
 from numpy import concatenate
 
 from LoggerUtils import LoggerUtils
-from Utils import load_cache, create_cache
+from Utils import load_cache
+from Utils import create_cache
 
 cache_file_name = 'images.cache'
 cache_file_name_ct = 'images_ct.cache'
