@@ -83,7 +83,7 @@ def contour(image, nodule_slice):
     xy_pix = vstack((x_grid.ravel(), y_grid.ravel())).T
     pth = Path(xy_crop, closed=True)
 
-    mask = pth.contains_points(xy_pix, radius=-0.001) \
+    mask = pth.contains_points(xy_pix, radius=-1) \
         .reshape(image.shape)
     masked = masked_array(image, ~mask)
 
@@ -97,7 +97,7 @@ def original_file_name(base_dir, nodule, nodule_slice):
     return join(base_dir,
                 nodule.study + '_' +
                 nodule.series + '_' +
-                '{0:+010.2f}'.format(float(nodule_slice.z_pos)) +
+                '{0:+010.2f}'.format(float(nodule_slice.z_pos)) + '_' +
                 nodule.nodule_id + '_' +
                 nodule_slice.image_uid + '_full.png')
 
@@ -107,7 +107,7 @@ def slice_image_name(base_dir, nodule, nodule_slice):
                 nodule.study + '_' +
                 nodule.series + '_' +
                 nodule.nodule_id + '_' +
-                '{0:+010.2f}'.format(float(nodule_slice.z_pos)) +
+                '{0:+010.2f}'.format(float(nodule_slice.z_pos)) + '_' +
                 nodule_slice.image_uid + '_' +
                 nodule.malignancy + '.png')
 

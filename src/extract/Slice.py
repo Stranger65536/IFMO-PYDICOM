@@ -20,7 +20,7 @@ def area(points):
     xy_pix = vstack((x_grid.ravel(), y_grid.ravel())).T
     pth = Path(xy_crop, closed=True)
 
-    return int(sum(pth.contains_points(xy_pix, radius=-0.001)))
+    return int(sum(pth.contains_points(xy_pix, radius=-1)))
 
 
 class Slice(object):

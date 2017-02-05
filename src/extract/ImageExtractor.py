@@ -82,5 +82,5 @@ def extract_images(dicoms_path,
                     extracted_slices_count += int(extracted)
         nodule_count += 1
 
-    log.info('{} nodule slices of extracted successfully'
+    log.info('{} nodule slices extracted successfully'
              .format(extracted_slices_count))

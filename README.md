@@ -4,7 +4,7 @@ This library allows you to perform machine learning on lung cancer nodules image
 
 # Hardware requirements
 
-* At least 1GB free RAM to  
+* At least 1GB free RAM 
 
 # Software requirements
 
