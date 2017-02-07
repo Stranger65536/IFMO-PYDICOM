@@ -180,6 +180,11 @@ def parse_nodules(xml_text, nodules):
                                   field='imageZposition')
                 inclusion = get_field(node=roi,
                                       field='inclusion')
+
+                if 'true' != inclusion.lower():
+                    # to work only with included slices
+                    continue
+
                 edge_maps = list(get_field(node=roi,
                                            field='edgeMap'))
                 points = []
@@ -192,7 +197,6 @@ def parse_nodules(xml_text, nodules):
 
                 nodule.slices.add(Slice(image_uid=image_uid,
                                         z_pos=z_pos,
-                                        inclusion=inclusion,
                                         points=points))
     return nodules
 
@@ -239,10 +243,7 @@ class AnnotationsLoader(object):
                          sum([len(n.slices) for n in
                               nodules.values()])))
 
-        log.info('Creating annotations cache: {}'
-                 .format(cache_file))
-        create_cache(cache_file,
-                     list(nodules.values()),
-                     log)
+        log.info('Creating annotations cache: {}'.format(cache_file))
+        create_cache(cache_file, list(nodules.values()), log)
 
         return list(nodules.values())

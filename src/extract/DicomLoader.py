@@ -22,11 +22,14 @@ log = LoggerUtils.get_logger('DicomLoader')
 cache_file_name = 'dicom.cache'
 
 unclassified_patients = set()
+total = set()
 
 
 def extract_image(dicom_path,
                   nodule,
                   nodule_slice,
+                  export_all_images,
+                  export_full_images,
                   diagnosis,
                   output_path):
     try:
@@ -39,23 +42,33 @@ def extract_image(dicom_path,
                 unclassified_patients.add(patient)
                 log.warn('Diagnosis not found for patient {}'
                          .format(patient))
-            nodule.malignancy = diagnosis_unknown
+            if export_all_images:
+                nodule.malignancy = diagnosis_unknown
+            else:
+                log.debug('Skip image due to no diagnosis '
+                          'found for this patient')
+                return False
         else:
-            nodule.malignancy = diagnosis[patient]
-
+            if diagnosis[patient] != diagnosis_unknown \
+                    or export_all_images:
+                nodule.malignancy = diagnosis[patient]
+            else:
+                log.debug('Skip image due to unknown '
+                          'diagnosis of this patient')
+                return False
         image = Image \
             .fromarray(ds.pixel_array.astype('int16')) \
             .convert('I;16')
         cropped = Image.fromarray(contour(image, nodule_slice), 'I;16')
 
         if cropped.height is not 0 and cropped.width is not 0:
-            full_path = join(output_path, 'full')
-            full_file = original_file_name(full_path,
-                                           nodule,
-                                           nodule_slice)
-            image.convert('L').save(full_file)
-            cropped_path = join(output_path, 'nodules')
-            slice_file = slice_image_name(cropped_path,
+            if export_full_images:
+                full_path = join(output_path, 'full')
+                full_file = original_file_name(full_path,
+                                               nodule,
+                                               nodule_slice)
+                image.convert('L').save(full_file)
+            slice_file = slice_image_name(output_path,
                                           nodule,
                                           nodule_slice)
             cropped.convert('L').save(slice_file)
@@ -97,7 +110,6 @@ def original_file_name(base_dir, nodule, nodule_slice):
     return join(base_dir,
                 nodule.study + '_' +
                 nodule.series + '_' +
-                '{0:+010.2f}'.format(float(nodule_slice.z_pos)) + '_' +
                 nodule.nodule_id + '_' +
                 nodule_slice.image_uid + '_full.png')
 
@@ -108,7 +120,7 @@ def slice_image_name(base_dir, nodule, nodule_slice):
                 nodule.series + '_' +
                 nodule.nodule_id + '_' +
                 '{0:+010.2f}'.format(float(nodule_slice.z_pos)) + '_' +
-                nodule_slice.image_uid + '_' +
+                nodule_slice.uid + '_' +
                 nodule.malignancy + '.png')
 
 

@@ -1,8 +1,10 @@
 # coding=utf-8
+from uuid import uuid4
+
 from matplotlib.path import Path
 from numpy import array
-from numpy import vstack
 from numpy import mgrid
+from numpy import vstack
 
 
 def area(points):
@@ -26,12 +28,12 @@ def area(points):
 
 
 class Slice(object):
-    def __init__(self, image_uid, z_pos, inclusion, points):
+    def __init__(self, image_uid, z_pos, points):
         self._image_uid = image_uid
         self._z_pos = float(z_pos)
-        self._inclusion = inclusion
-        self._points = tuple(points)
         self._area = area(points)
+        self._uid = uuid4().hex
+        self._points = tuple(points)
 
     @property
     def image_uid(self):
@@ -42,16 +44,16 @@ class Slice(object):
         return self._z_pos
 
     @property
-    def inclusion(self):
-        return self._inclusion
+    def area(self):
+        return self._area
+
+    @property
+    def uid(self):
+        return self._uid
 
     @property
     def points(self):
         return self._points
-
-    @property
-    def area(self):
-        return self._area
 
     def __eq__(self, other):
         if not isinstance(other, Slice):
@@ -60,20 +62,19 @@ class Slice(object):
         return \
             self.image_uid == other.image_uid and \
             self.z_pos == other.z_pos and \
-            self.inclusion == other.inclusion and \
             self.points == other.points
 
     def __hash__(self, *args, **kwargs):
         return hash((self._image_uid,
                      self._z_pos,
-                     self._inclusion,
                      self._points))
 
     def __repr__(self, *args, **kwargs):
         return ''.join(['Slice(',
                         str(self._image_uid), ',',
                         str(self._z_pos), ',',
-                        str(self._inclusion), ',',
+                        str(self._area), ',',
+                        str(self._uid), ',',
                         str(self._points), ')'])
 
     def __str__(self, *args, **kwargs):

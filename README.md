@@ -48,6 +48,11 @@ optional arguments:
   -o OUTPUT_DIRECTORY, --output_directory OUTPUT_DIRECTORY
                         All nodule images will be stored in the specified
                         directory. Directory will be created if necessary
+  -A, --all             If set, images of all slices, including slices without
+                        defined diagnosis and with unknown diagnosis will be
+                        exported
+  -f, --full            If set, full CT scans will be extracted in a "full"
+                        subdirectory
 ```
 
 First run may take a while. During first time extraction caches with annotations, dicoms metadata and diagnosis will be created. It will reduce time for next image extractions. 
