@@ -1,22 +1,23 @@
 # coding=utf-8
-from imghdr import what
-from os import listdir
+from functools import reduce
 from os.path import isfile
-from os.path import splitext
 from os.path import join
+from os.path import splitext
 
 from PIL import Image
-from PIL.Image import ANTIALIAS
-from PIL.Image import new
 from keras.datasets import cifar10
 from keras.datasets import mnist
 from numpy import asarray
 from numpy import concatenate
+from numpy.random import choice
 
 from LoggerUtils import LoggerUtils
-from Utils import load_cache
 from Utils import create_cache
+from Utils import load_cache
+from extract.DicomLoader import slice_image_name
+from extract.ImageExtractor import slices_cache_name
 
+min_area = 100
 cache_file_name = 'images.cache'
 cache_file_name_ct = 'images_ct.cache'
 cache_file_name_m = 'images_m.cache'
@@ -27,6 +28,7 @@ class Dataset(object):
     _x = None
     _y = None
 
+    # noinspection PyUnusedLocal
     def __init__(self, args):
         super().__init__()
 
@@ -37,6 +39,21 @@ class Dataset(object):
     @property
     def y(self):
         return self._y
+
+    def bootstrap_iter(self):
+        train_indexes = set(choice(self.y.shape[0],
+                                   size=self.y.shape[0],
+                                   replace=True))
+        test_indexes = list(set(range(self.y.shape[0])) - train_indexes)
+        train_indexes = list(train_indexes)
+
+        y_train = asarray([self.y[i] for i in train_indexes])
+        y_test = asarray([self.y[i] for i in test_indexes])
+
+        x_train = asarray([self.x[i] for i in train_indexes])
+        x_test = asarray([self.x[i] for i in test_indexes])
+
+        return (x_train, y_train), (x_test, y_test)
 
 
 class MNIST(Dataset):
@@ -49,7 +66,7 @@ class MNIST(Dataset):
         self._x = list(asarray([x for (x, y) in filtered]))
         self._y = asarray([y for (x, y) in filtered])
         log.info('Dataset {} successfully imported'
-                 .format(type(MNIST).__name__))
+                 .format(MNIST.__name__))
 
 
 class CIFAR10(Dataset):
@@ -63,7 +80,7 @@ class CIFAR10(Dataset):
                        .transpose((0, 2, 3, 1)))
         self._y = asarray([y for (x, y) in filtered])
         log.info('Dataset {} successfully imported'
-                 .format(type(CIFAR10).__name__))
+                 .format(CIFAR10.__name__))
 
 
 class LIDC(Dataset):
@@ -73,6 +90,7 @@ class LIDC(Dataset):
         self._images_path = args.images_path
 
         cache_file = join(self._images_path, cache_file_name)
+        slices_cache_file = join(self._images_path, slices_cache_name)
 
         if isfile(cache_file):
             log.info('Found cache file with LIDC images, '
@@ -80,12 +98,22 @@ class LIDC(Dataset):
                      .format(cache_file))
             self._x, self._y = load_cache(cache_file)
         else:
-            log.info('Scanning image files')
+            log.info('Loading exported slices info from cache {}'
+                     .format(slices_cache_file))
 
-            image_files = [join(self._images_path, file) for file
-                           in listdir(self._images_path)
-                           if isfile(join(self._images_path, file))
-                           and what(join(self._images_path, file))]
+            extracted_nodules = load_cache(slices_cache_file)
+
+            log.info('Computing nodule slices with the biggest area '
+                     'greater than {}'.format(min_area))
+
+            image_files = [slice_image_name(self._images_path,
+                                            nodule,
+                                            biggest_slice(nodule))
+                           for nodule in extracted_nodules
+                           if biggest_slice(nodule).area > min_area]
+
+            log.info('{} slices have been selected to load'
+                     .format(len(image_files)))
 
             log.info('Loading images')
 
@@ -130,7 +158,7 @@ class LIDCCancerType(LIDC):
                  .format(self._y.shape[0]))
 
         log.info('Dataset {} successfully imported'
-                 .format(type(LIDCCancerType).__name__))
+                 .format(LIDCCancerType.__name__))
 
 
 class LIDCMalignancy(LIDC):
@@ -157,7 +185,7 @@ class LIDCMalignancy(LIDC):
                  .format(self._y.shape[0]))
 
         log.info('Dataset {} successfully imported'
-                 .format(type(LIDCMalignancy).__name__))
+                 .format(LIDCMalignancy.__name__))
 
 
 def load_image(path):
@@ -165,19 +193,10 @@ def load_image(path):
     return asarray(Image.open(path).convert('L'), dtype='uint8')
 
 
-def scale_image(im, size):
-    if im.width < im.height:
-        width, height = (round(im.width * size / im.height), size)
-        offset = round((size - width) / 2), 0
-    else:
-        width, height = (size, round(im.height * size / im.width))
-        offset = 0, round((size - height) / 2)
-
-    background = new('L', (size, size))
-    scaled = im.resize((width, height), ANTIALIAS)
-    background.paste(scaled, offset)
-
-    return background
+def biggest_slice(nodule):
+    return reduce(lambda a, b:
+                  a if a.area > b.area else b,
+                  nodule.slices)
 
 
 def file_suffix(file_name):
@@ -185,8 +204,8 @@ def file_suffix(file_name):
 
 
 supported_datasets = {
-    'MNIST': type(MNIST),  # 0 and 1 handwritten images only
-    'CIFAR10': type(CIFAR10),  # cats and dogs only
-    'LIDC-Cancer-Type': type(LIDCCancerType),  # Two cancer types
-    'LIDC-Malignancy': type(LIDCMalignancy)  # Malignant or not
+    'MNIST': MNIST,  # 0 and 1 handwritten images only
+    'CIFAR10': CIFAR10,  # cats and dogs only
+    'LIDC-Cancer-Type': LIDCCancerType,  # Two cancer types
+    'LIDC-Malignancy': LIDCMalignancy  # Malignant or not
 }

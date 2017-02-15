@@ -3,7 +3,7 @@ import logging
 from argparse import ArgumentParser
 from importlib import reload
 
-from extract import ImageExtractor
+from extract.ImageExtractor import extract_images
 
 reload(logging)
 
@@ -58,12 +58,12 @@ def main():
                         help='If set, full CT scans will be '
                              'extracted in a "full" subdirectory')
     args = parser.parse_args()
-    ImageExtractor.extract_images(args.dicom,
-                                  args.annotations,
-                                  args.diagnosis,
-                                  args.output_directory,
-                                  args.export_all_images,
-                                  args.export_full_images)
+    extract_images(args.dicom,
+                   args.annotations,
+                   args.diagnosis,
+                   args.output_directory,
+                   args.export_all_images,
+                   args.export_full_images)
 
 
 if __name__ == '__main__':
